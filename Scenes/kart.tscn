@@ -1,0 +1,35 @@
+[gd_scene load_steps=5 format=3 uid="uid://cipgmtgdukdgr"]
+
+[ext_resource type="Script" path="res://Scripts/kart.gd" id="1_lfr8j"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_88mq5"]
+size = Vector3(1, 1, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_isxpg"]
+shading_mode = 2
+diffuse_mode = 3
+specular_mode = 1
+disable_ambient_light = true
+disable_fog = true
+albedo_color = Color(1, 0.235294, 0.156863, 1)
+texture_filter = 0
+disable_receive_shadows = true
+
+[sub_resource type="BoxMesh" id="BoxMesh_6xy5g"]
+material = SubResource("StandardMaterial3D_isxpg")
+size = Vector3(1, 1, 2)
+
+[node name="Kart" type="CharacterBody3D"]
+floor_stop_on_slope = false
+script = ExtResource("1_lfr8j")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_88mq5")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="CollisionShape3D"]
+mesh = SubResource("BoxMesh_6xy5g")
+
+[node name="CameraHolder" type="Node3D" parent="."]
+
+[node name="Camera3D" type="Camera3D" parent="CameraHolder"]
+transform = Transform3D(-1, 1.51808e-08, -8.60946e-08, 0, 0.984808, 0.173648, 8.74228e-08, 0.173648, -0.984808, 0, 2, -3)

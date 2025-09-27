@@ -1,0 +1,15 @@
+[gd_resource type="PlaneMesh" load_steps=2 format=3 uid="uid://deldpw0ymjoee"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3xyju"]
+shading_mode = 2
+diffuse_mode = 3
+specular_mode = 1
+disable_ambient_light = true
+disable_fog = true
+albedo_color = Color(0.188235, 0.388235, 0.188235, 1)
+texture_filter = 0
+texture_repeat = false
+disable_receive_shadows = true
+
+[resource]
+material = SubResource("StandardMaterial3D_3xyju")
