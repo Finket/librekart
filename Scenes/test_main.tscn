@@ -17,3 +17,7 @@ transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 0, 1.8
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.967665, 0.204321, 0.147909, -0.14251, -0.040975, 0.988945, 0.208123, -0.978046, -0.0105323, 0, 0, 0)
+
+[node name="BoostTimer" type="Timer" parent="."]
+process_callback = 0
+one_shot = true

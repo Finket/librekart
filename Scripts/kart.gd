@@ -5,6 +5,9 @@ enum FloorTypes { ROAD, OFFROAD, BOOST }
 @onready var track : GridMap = $"../TrackGridMap"
 @onready var camera : Node3D = $CameraHolder
 
+@onready var boost_timer : Timer = $"../BoostTimer"
+var drift_timer : float = 0.0
+
 # No default value means left TODO
 var top_speed : float = 12.0
 var acceleration : float = 10.0
@@ -12,7 +15,7 @@ var handling : float = 1.1
 var weight : float = 0.9
 var drift_power : float = 2.0
 
-var max_speed_boosted : float = 20.0
+var max_speed : float = top_speed # CURRENT top speed considering boosts
 
 var gas_strength : float = 0.0
 var turn_strength : float = 0.0
@@ -33,7 +36,7 @@ var default_friction : float = 20.0
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	pass # Replace with function body.
+	boost_timer.timeout.connect(end_boost)
 
 # We use _input to allow controlling in menus for quick driving settings fixes.
 # Switch to _unhandled_input if this sucks during gameplay.
@@ -65,13 +68,10 @@ func _input(event : InputEvent) -> void:
 		if event.is_action_released("look_right"):
 			looking = false
 			camera.rotation.y = base_camera_rotation
-		
-		#"hop":
-			#pass
-		#"look_left":
-			#pass
-		#"look_right":
-			#pass
+
+func end_boost() -> void:
+	max_speed = top_speed
+	print('boost stopped')
 
 func hop() -> void:
 	if not is_on_floor():
@@ -85,9 +85,11 @@ func drift(enter_drift : bool = true) -> void:
 		turn_offset = target_camera_rotation
 		target_camera_rotation = 0.0
 		
-		# TODO: add boost which is additional acceleration with a timer
-		#velocity += global_transform.basis.z * acceleration
-		pass
+		boost_timer.wait_time = minf(drift_timer, 2.0)
+		boost_timer.start()
+		max_speed = top_speed * 2 # double the top speed for drift duration for now
+		drift_timer = 0.0
+		print('drift boosting for ', boost_timer.wait_time, 's')
 		
 	if not enter_drift:
 		drifting = 0
@@ -136,7 +138,7 @@ func turn(delta : float) -> void:
 	
 	# Velocity correction when finishing a drift
 	if turn_offset != 0.0 or (not drifting and abs(target_camera_rotation) > 0.0):
-		horizontal_velocity = horizontal_velocity.slerp(global_transform.basis.z * horizontal_speed, 8.0 * delta)
+		horizontal_velocity = horizontal_velocity.slerp(global_transform.basis.z * horizontal_speed, 16.0 * delta)
 	
 	velocity.x = horizontal_velocity.x
 	velocity.z = horizontal_velocity.z
@@ -145,9 +147,9 @@ func gas(delta : float) -> void:
 	var new_velocity : Vector3 = velocity + global_transform.basis.z * acceleration * gas_strength * delta
 	
 	if gas_strength > 0.0:
-		velocity = new_velocity.limit_length(top_speed)
+		velocity = new_velocity.limit_length(max_speed)
 	elif gas_strength < 0.0:
-		velocity = new_velocity.limit_length(top_speed / 2.0)
+		velocity = new_velocity.limit_length(max_speed / 2.0)
 	
 	if Vector3(velocity.x, 0, velocity.z).dot(global_transform.basis.z) < 0.0:
 		reversing = true
@@ -165,16 +167,16 @@ func apply_friction(delta : float):
 	var horizontal_velocity : Vector3 = Vector3(velocity.x, 0, velocity.z)
 	
 	var friction : float = default_friction
-	var cap : float = top_speed
+	var cap : float = max_speed
 	match floor_type:
 		FloorTypes.ROAD:
 			friction = default_friction
 		FloorTypes.OFFROAD:
 			friction = default_friction * 2.0
-			cap = top_speed / 4.0
+			cap = max_speed / 4.0
 		FloorTypes.BOOST:
 			friction = default_friction / 2.0
-			cap = top_speed * 2.0
+			cap = top_speed * 2.0 # top_speed to avoid stacking boosts
 	
 	if drifting:
 		friction *= 0.5
@@ -235,7 +237,7 @@ func _physics_process(delta: float) -> void:
 		gas(delta)
 	
 	# Going too slow for some interactions
-	if velocity.length_squared() <= top_speed / 2.0:
+	if velocity.length_squared() <= max_speed / 2.0:
 		bogged = true
 	else:
 		bogged = false
@@ -243,6 +245,9 @@ func _physics_process(delta: float) -> void:
 	if reversing:
 		if velocity == Vector3.ZERO:
 			reversing = false
+	
+	if drifting != 0:
+		drift_timer += delta
 	
 	apply_gravity(delta)
 	apply_friction(delta)
