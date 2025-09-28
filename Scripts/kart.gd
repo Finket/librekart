@@ -244,6 +244,12 @@ func _physics_process(delta: float) -> void:
 		if velocity == Vector3.ZERO:
 			reversing = false
 	
+	apply_gravity(delta)
+	apply_friction(delta)
+	
+	move_and_slide()
+
+func _process(delta: float) -> void:
 	if reversing:
 		base_camera_rotation = lerp(camera.rotation.y, target_camera_rotation - PI, 10.0 * delta)
 	else:
@@ -251,8 +257,3 @@ func _physics_process(delta: float) -> void:
 	
 	if not looking:
 		free_look()
-	
-	apply_gravity(delta)
-	apply_friction(delta)
-	
-	move_and_slide()
